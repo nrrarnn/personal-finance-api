@@ -1,28 +1,29 @@
-const User = require("../models/userModel")
-const jwt = require('jsonwebtoken')
+const User = require("../models/userModel");
+const jwt = require('jsonwebtoken');
 
 exports.register = async (req, res) => {
-  const { username, email, password } = req.body
+  const { username, email, password } = req.body;
 
   try {
-    let user = await User.findOne({ email })
-    if (user) {
-      return res.status(400).json({ message: 'User already exists' })
-    }
+    // Cek apakah user sudah ada
+    // let user = await User.findOne({ email });
+    // if (user) {
+    //   return res.status(400).json({ message: 'User already exists' });
+    // }
 
-    user = new User({
-      username,
-      email,
-      password
-    })
+    // Buat user baru
+    user = new User({ username, email, password });
 
-    await user.save()
+    // Simpan user ke database
+    await user.save();
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' })
+    // Buat JWT token
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-    res.status(201).json({ token })
+    // Kirim respons
+    res.status(201).json({ token });
   } catch (error) {
-    console.error(error)
-    res.status(500).json({ message: 'Server error' })
+    console.error(error); // Tambahkan informasi error untuk debugging
+    res.status(500).json({ message: 'Server error' });
   }
-}
+};
