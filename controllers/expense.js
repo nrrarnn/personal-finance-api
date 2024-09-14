@@ -1,7 +1,7 @@
 const ExpenseSchema = require("../models/expenseModel")
 
 exports.addExpense = async (req, res) => {
-  const {title, amount, category, description, date}  = req.body
+  const {title, amount, category, description}  = req.body
 
   const userId = req.user.userId;
 
@@ -10,12 +10,11 @@ exports.addExpense = async (req, res) => {
     amount,
     category,
     description,
-    date,
     userId
   })
 
   try {
-    if(!title || !amount || !date || !category || !description) {
+    if(!title || !amount || !category || !description) {
       return res.status(400).json({ message: "All fields are required" })
     }
     if(amount <= 0 || !amount === 'number') {
@@ -54,4 +53,28 @@ exports.deleteExpense = async (req, res) =>{
         res.status(500).json({ message: 'Server Error' });
     }
 }
+
+exports.getExpensesByCategory = async (req, res) => {
+  const { category } = req.params;
+  try {
+    console.log("Category:", category);
+    console.log("UserId:", req.user.userId);
+
+    const expenses = await ExpenseSchema.find({
+      category: category,
+      userId: req.user.userId
+    });
+
+    console.log("Expenses found:", expenses);
+
+    if (expenses.length === 0) {
+      return res.status(404).json({ message: "No expenses found for this category" });
+    }
+
+    res.json(expenses);
+  } catch (error) {
+    console.error("Error fetching expenses by category:", error); // Log error untuk pelacakan
+    res.status(500).json({ message: "Error fetching expenses by category", error });
+  }
+};
 

@@ -1,7 +1,7 @@
 const IncomeSchema = require("../models/incomeModel")
 
 exports.addIncome = async (req, res) => {
-  const { title, amount, category, description, date } = req.body;
+  const { title, amount, description } = req.body;
 
   const userId = req.user?.userId; 
 
@@ -9,7 +9,7 @@ exports.addIncome = async (req, res) => {
     return res.status(400).json({ message: "User ID is missing" });
   }
 
-  if (!title || !amount || !date || !category || !description) {
+  if (!title || !amount || !description) {
     return res.status(400).json({ message: "All fields are required" });
   }
   
@@ -20,9 +20,7 @@ exports.addIncome = async (req, res) => {
   const income = IncomeSchema({
     title,
     amount,
-    category,
     description,
-    date,
     userId 
   })
 

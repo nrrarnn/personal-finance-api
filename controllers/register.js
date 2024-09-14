@@ -1,3 +1,4 @@
+const Category = require("../models/categoryModel");
 const User = require("../models/userModel");
 const jwt = require('jsonwebtoken');
 
@@ -13,6 +14,20 @@ exports.register = async (req, res) => {
     user = new User({ username, email, password });
 
     await user.save();
+
+    const defaultCategories = ["Food", "Transport", "Bills"];
+      for (const categoryName of defaultCategories) {
+        try {
+          const category = new Category({
+            name: categoryName,
+            userId: user._id,
+        });
+        await category.save();
+        } catch (error) {
+        console.error(`Error creating category ${categoryName}:`, error);
+      }
+    }
+
 
     const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
