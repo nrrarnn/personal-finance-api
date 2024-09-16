@@ -1,7 +1,7 @@
 const CategorySchema = require("../models/categoryModel")
 
 exports.addCategory = async (req, res) => {
-  const { name } = req.body;
+  const { name, icon, type } = req.body;
 
   if (!name) {
     return res.status(400).json({ message: "Category name is required" });
@@ -10,6 +10,8 @@ exports.addCategory = async (req, res) => {
   try {
     const category = new CategorySchema({
       name,
+      icon,
+      type,
       userId: req.user.userId,
     });
     await category.save();

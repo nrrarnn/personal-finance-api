@@ -15,16 +15,31 @@ exports.register = async (req, res) => {
 
     await user.save();
 
-    const defaultCategories = ["Food", "Transport", "Bills"];
-      for (const categoryName of defaultCategories) {
+    const defaultCategories = [
+      { name: "Food", icon: "🍔" , type: "expense"},
+      { name: "Transport", icon: "🚗", type: "expense" },
+      { name: "Bills", icon: "💡", type: "expense" },
+      { name: "Shopping", icon: "🛍️" , type: "expense"},
+      { name: "Health", icon: "🩺", type: "expense" },
+      { name: "Education", icon: "🎓", type: "expense" },
+      { name: "Groceries", icon: "🛒" , type: "expense"},
+      { name: "Entertainment", icon: "🎭" , type: "expense"},
+      { name: "Rent", icon: "🏠", type: "expense" },
+      { name: "Salary", icon: "💼", type: "income" },
+      { name: "Freelance", icon: "🖥️", type: "income" },
+      { name: "Investments", icon: "📈", type: "income" },
+    ];
+      for (const {name, icon, type} of defaultCategories) {
         try {
           const category = new Category({
-            name: categoryName,
+            name: name,
+            icon: icon,
+            type: type,
             userId: user._id,
         });
         await category.save();
         } catch (error) {
-        console.error(`Error creating category ${categoryName}:`, error);
+        console.error(`Error creating category ${name}:`, error);
       }
     }
 

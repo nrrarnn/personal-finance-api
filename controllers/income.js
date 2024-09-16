@@ -1,7 +1,7 @@
 const IncomeSchema = require("../models/incomeModel")
 
 exports.addIncome = async (req, res) => {
-  const { title, amount, description } = req.body;
+  const { title, amount, category, description } = req.body;
 
   const userId = req.user?.userId; 
 
@@ -9,7 +9,7 @@ exports.addIncome = async (req, res) => {
     return res.status(400).json({ message: "User ID is missing" });
   }
 
-  if (!title || !amount || !description) {
+  if (!title || !amount || !category ||!description) {
     return res.status(400).json({ message: "All fields are required" });
   }
   
@@ -20,6 +20,7 @@ exports.addIncome = async (req, res) => {
   const income = IncomeSchema({
     title,
     amount,
+    category,
     description,
     userId 
   })
@@ -59,4 +60,29 @@ exports.deleteIncome = async (req, res) => {
         res.status(500).json({ message: 'Server Error' });
     }
 };
+
+exports.getIncomesByCategory = async (req, res) => {
+  const { category } = req.params;
+  try {
+    console.log("Category:", category);
+    console.log("UserId:", req.user.userId);
+
+    const incomes = await IncomeSchema.find({
+      category: category,
+      userId: req.user.userId
+    });
+
+    console.log("Incomes found:", incomes);
+
+    if (incomes.length === 0) {
+      return res.status(404).json({ message: "No incomes found for this category" });
+    }
+
+    res.json(incomes);
+  } catch (error) {
+    console.error("Error fetching incomes by category:", error); 
+    res.status(500).json({ message: "Error fetching incomes by category", error });
+  }
+};
+
 
