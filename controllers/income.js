@@ -61,6 +61,45 @@ exports.deleteIncome = async (req, res) => {
     }
 };
 
+exports.updateIncome = async (req, res) => {
+  const { id } = req.params;
+  const { title, amount, category, description } = req.body;
+
+  const userId = req.user?.userId;
+
+  if (!userId) {
+    return res.status(400).json({ message: "User  ID is missing" });
+  }
+
+  if (!title || !amount || !category || !description) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  if (typeof amount !== 'number' || amount <= 0) {
+    return res.status(400).json({ message: "Amount must be a positive number" });
+  }
+
+  try {
+    const income = await IncomeSchema.findOne({ _id: id, userId });
+
+    if (!income) {
+      return res.status(404).json({ message: 'Income not found or unauthorized' });
+    }
+
+    income.title = title;
+    income.amount = amount;
+    income.category = category;
+    income.description = description;
+
+    await income.save(); 
+
+    res.status(200).json({ message: "Income updated successfully", income });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 exports.getIncomesByCategory = async (req, res) => {
   const { category } = req.params;
   try {
