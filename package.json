@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "app.js",
   "scripts": {
-    "start": "nodemon app.js"
+    "start": "nodemon --watch src --ext ts --exec ts-node src/app.ts"
   },
   "author": "nurarini",
   "license": "ISC",
@@ -16,5 +16,14 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.6.1",
     "nodemon": "^3.1.4"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^24.0.10",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
   }
 }
