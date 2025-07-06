@@ -16,6 +16,12 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    let existingUserByUsername = await User.findOne({ username });
+    if (existingUserByUsername) {
+      res.status(400).json({ message: 'Username is already taken' });
+      return;
+    }
+
     user = new User({ username, email, password });
     await user.save();
 
