@@ -32,13 +32,17 @@ readdirSync(path.join(__dirname, 'routes')).forEach((route) => {
   }
 });
 
-const startServer = async (): Promise<void> => {
-  await connectDatabase();
+app.get('/', (req, res) => {
+  res.send('Welcome to the API Personal Finance');
+});
 
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
-};
+// const startServer = async (): Promise<void> => {
+//   await connectDatabase();
 
-startServer();
+//   const PORT = process.env.PORT || 3000;
+//   app.listen(PORT, () => {
+//     console.log(`Server running on port ${PORT}`);
+//   });
+// };
+
+// startServer();
