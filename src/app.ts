@@ -12,15 +12,18 @@ const app: Application = express();
 app.use(express.json());
 app.use(cors());
 
-const connectDatabase = async (): Promise<void> => {
+app.use(async (req, res, next) => {
   try {
-    await db(); 
-    console.log('Database connected successfully');
+    if (!db()) {
+      await db();
+      console.log('Database connected successfully');
+    }
+    next();
   } catch (error: any) {
     console.error('Failed to connect to database:', error.message);
-    process.exit(1);
+    res.status(500).json({ message: 'Database connection error' });
   }
-};
+});
 
 readdirSync(path.join(__dirname, 'routes')).forEach((route) => {
   try {
@@ -36,13 +39,4 @@ app.get('/', (req, res) => {
   res.send('Welcome to the API Personal Finance');
 });
 
-// const startServer = async (): Promise<void> => {
-//   await connectDatabase();
-
-//   const PORT = process.env.PORT || 3000;
-//   app.listen(PORT, () => {
-//     console.log(`Server running on port ${PORT}`);
-//   });
-// };
-
-// startServer();
+export default app;
