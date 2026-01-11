@@ -45,59 +45,57 @@ export const register = async (req: Request, res: Response): Promise<void> => {
   const { username, email, password } = req.body;
 
   try {
-    let user = await User.findOne({ email });
-    if (user) {
-      res.status(400).json({ message: 'User already exists' });
+    // 1. Optimize check with a single query
+    const existingUser = await User.findOne({
+      $or: [{ email }, { username }]
+    });
+
+    if (existingUser) {
+      const field = existingUser.email === email ? 'Email' : 'Username';
+      res.status(400).json({ message: `${field} is already in use` });
       return;
     }
 
-    let existingUserByUsername = await User.findOne({ username });
-    if (existingUserByUsername) {
-      res.status(400).json({ message: 'Username is already taken' });
-      return;
-    }
-
-    user = new User({ username, email, password });
+    const user = new User({ username, email, password });
     await user.save();
 
+    // 2. Default Categories
     const defaultCategories = [
-      { name: 'Food', icon: '🍔', type: 'expense' },
-      { name: 'Transport', icon: '🚗', type: 'expense' },
-      { name: 'Bills', icon: '💡', type: 'expense' },
-      { name: 'Shopping', icon: '🛍️', type: 'expense' },
-      { name: 'Health', icon: '🩺', type: 'expense' },
-      { name: 'Education', icon: '🎓', type: 'expense' },
-      { name: 'Groceries', icon: '🛒', type: 'expense' },
-      { name: 'Entertainment', icon: '🎭', type: 'expense' },
-      { name: 'Rent', icon: '🏠', type: 'expense' },
-      { name: 'Salary', icon: '💼', type: 'income' },
-      { name: 'Freelance', icon: '🖥️', type: 'income' },
-      { name: 'Investments', icon: '📈', type: 'income' }
-    ] as const;
+      { name: 'Food', icon: '🍔', type: 'expense', userId: user._id },
+      { name: 'Transport', icon: '🚗', type: 'expense', userId: user._id },
+      { name: 'Bills', icon: '💡', type: 'expense', userId: user._id },
+      { name: 'Shopping', icon: '🛍️', type: 'expense', userId: user._id },
+      { name: 'Health', icon: '🩺', type: 'expense', userId: user._id },
+      { name: 'Education', icon: '🎓', type: 'expense', userId: user._id },
+      { name: 'Groceries', icon: '🛒', type: 'expense', userId: user._id },
+      { name: 'Entertainment', icon: '🎭', type: 'expense', userId: user._id },
+      { name: 'Rent', icon: '🏠', type: 'expense', userId: user._id },
+      { name: 'Salary', icon: '💼', type: 'income', userId: user._id },
+      { name: 'Freelance', icon: '🖥️', type: 'income', userId: user._id },
+      { name: 'Investments', icon: '📈', type: 'income', userId: user._id }
+    ];
 
-    for (const { name, icon, type } of defaultCategories) {
-      try {
-        const category = new Category({
-          name,
-          icon,
-          type,
-          userId: user._id
-        });
-        await category.save();
-      } catch (error) {
-        console.error(`Error creating category ${name}:`, error);
-      }
-    }
+    // Use insertMany for bulk insertion - much faster
+    await Category.insertMany(defaultCategories);
 
     const token = jwt.sign(
       { userId: user._id },
       process.env.JWT_SECRET as string,
-      { expiresIn: '1h' }
+      { expiresIn: '7d' } // Consistent with login
     );
 
-    res.status(201).json({ token });
+    res.status(201).json({ 
+      success: true,
+      message: "User registered successfully",
+      token,
+      user: {
+        username: user.username,
+        email: user.email
+      }
+    });
   } catch (error) {
-    console.error(error);
+    console.error(`[register] Error: ${(error as Error).message}`);
     res.status(500).json({ message: 'Server error' });
   }
 };
+

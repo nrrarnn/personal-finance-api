@@ -109,18 +109,24 @@ export const getPieChartData = async (
           as: "categoryDetails"
         }
       },
-      // 4. Flatten the categoryDetails array
-      { $unwind: "$categoryDetails" },
+      // 4. Flatten the categoryDetails array - handle cases where category might have been deleted but transaction exists
+      { 
+        $unwind: {
+          path: "$categoryDetails",
+          preserveNullAndEmptyArrays: false // We only want valid categories for the chart
+        }
+      },
       // 5. Project final format for frontend chart libraries
       {
         $project: {
           _id: 0,
-          label: "$categoryDetails.name",
+          label: { $ifNull: ["$categoryDetails.name", "Unknown"] },
           value: "$totalAmount",
-          color: { $ifNull: ["$categoryDetails.color", "#cccccc"] }, // Default color if missing
-          icon: "$categoryDetails.icon"
+          color: { $ifNull: ["$categoryDetails.color", "#cccccc"] },
+          icon: { $ifNull: ["$categoryDetails.icon", "❓"] }
         }
       },
+
       // 6. Sort by value descending
       { $sort: { value: -1 } }
     ]);

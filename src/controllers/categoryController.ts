@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import Category from '../models/categoryModel';
 
 export const addCategory = async (req: Request, res: Response): Promise<void> => {
@@ -57,6 +58,11 @@ export const updateCategory = async (req: Request, res: Response): Promise<void>
     const { name, icon, type } = req.body;
     const userId = req.user?.userId;
 
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      res.status(400).json({ message: "Invalid category ID format" });
+      return;
+    }
+
     const category = await Category.findOne({ _id: id, userId });
     if (!category) {
       res.status(404).json({ message: "Category not found or unauthorized" });
@@ -84,6 +90,11 @@ export const deleteCategory = async (req: Request, res: Response): Promise<void>
     const { id } = req.params;
     const userId = req.user?.userId;
 
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      res.status(400).json({ message: "Invalid category ID format" });
+      return;
+    }
+
     const category = await Category.findOneAndDelete({ _id: id, userId });
     
     if (!category) {
@@ -91,11 +102,15 @@ export const deleteCategory = async (req: Request, res: Response): Promise<void>
       return;
     }
 
-    res.status(200).json({ message: 'Category deleted successfully' });
+    res.status(200).json({ 
+      success: true,
+      message: 'Category deleted successfully' 
+    });
   } catch (error) {
     console.error(`[deleteCategory] Error: ${(error as Error).message}`);
     res.status(500).json({ message: 'Server Error while deleting category' });
   }
 };
+
 
 

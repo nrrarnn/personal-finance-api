@@ -11,7 +11,12 @@ export const getBalance = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
-    const stats = await Transaction.aggregate([
+    interface AggregationResult {
+      _id: 'income' | 'expense';
+      total: number;
+    }
+
+    const stats = await Transaction.aggregate<AggregationResult>([
       { $match: { userId: new mongoose.Types.ObjectId(userId) } },
       {
         $group: {
@@ -22,10 +27,11 @@ export const getBalance = async (req: Request, res: Response): Promise<void> => 
     ]);
 
     // Map results to variables
-    const totals = stats.reduce((acc: any, curr: any) => {
+    const totals = stats.reduce((acc, curr) => {
       acc[curr._id] = curr.total;
       return acc;
     }, { income: 0, expense: 0 });
+
 
     const totalIncome = totals.income;
     const totalExpense = totals.expense;
