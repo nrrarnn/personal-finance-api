@@ -11,7 +11,7 @@ interface TransactionQuery extends FilterQuery<ITransaction> {
 
 export const createTransaction = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { amount, category, date, description, type } = req.body;
+    const { title, amount, category, date, description, type } = req.body;
     const userId = req.user?.userId;
 
     if (!userId) {
@@ -19,8 +19,8 @@ export const createTransaction = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-    if (!amount || !category || !type) {
-      res.status(400).json({ message: "Amount, category, and type are required" });
+    if (!title || !amount || !category || !type) {
+      res.status(400).json({ message: "Title, amount, category, and type are required" });
       return;
     }
 
@@ -42,6 +42,7 @@ export const createTransaction = async (req: Request, res: Response): Promise<vo
     }
 
     const transaction = new Transaction({
+      title,
       amount,
       category,
       date: date || new Date(),
@@ -90,16 +91,16 @@ export const getTransactions = async (req: Request, res: Response): Promise<void
 
 export const updateTransaction = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id } = req.params;
-    const { amount, category, date, description, type } = req.body;
+    const { id: transactionId } = req.params;
+    const { title, amount, category, date, description, type } = req.body;
     const userId = req.user?.userId;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!mongoose.Types.ObjectId.isValid(transactionId)) {
       res.status(400).json({ message: "Invalid transaction ID format" });
       return;
     }
 
-    const transaction = await Transaction.findOne({ _id: id, userId });
+    const transaction = await Transaction.findOne({ _id: transactionId, userId });
     if (!transaction) {
       res.status(404).json({ message: "Transaction not found or unauthorized" });
       return;
@@ -127,6 +128,7 @@ export const updateTransaction = async (req: Request, res: Response): Promise<vo
     }
     
     if (date) transaction.date = date;
+    if (title) transaction.title = title;
     if (description !== undefined) transaction.description = description;
     if (type) transaction.type = type;
 

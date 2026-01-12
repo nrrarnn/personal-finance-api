@@ -4,6 +4,7 @@ import { ICategory } from './categoryModel';
 export interface ITransaction extends Document {
   userId: mongoose.Types.ObjectId;
   type: 'income' | 'expense';
+  title: string;
   amount: number;
   category: Types.ObjectId | ICategory;
   date: Date;
@@ -13,6 +14,7 @@ export interface ITransaction extends Document {
 const TransactionSchema: Schema = new Schema({
   userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true }, 
   type: { type: String, enum: ['income', 'expense'], required: true },
+  title: { type: String, required: true },
   amount: { type: Number, required: true },
   category: { type: Schema.Types.ObjectId, ref: 'Category', required: true },
   date: { type: Date, default: Date.now, index: true }, 
