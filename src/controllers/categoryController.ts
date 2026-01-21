@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import mongoose from 'mongoose';
 import Category from '../models/categoryModel';
+import Transaction from '../models/transactionModel';
 
 export const addCategory = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -91,24 +92,37 @@ export const deleteCategory = async (req: Request, res: Response): Promise<void>
     const userId = req.user?.userId;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      res.status(400).json({ message: "Invalid category ID format" });
+      res.status(400).json({ success: false, message: "Invalid category ID format" });
       return;
     }
 
-    const category = await Category.findOneAndDelete({ _id: id, userId });
+    const category = await Category.findOne({ _id: id, userId });
     
     if (!category) {
-      res.status(404).json({ message: 'Category not found or unauthorized' });
+      res.status(404).json({ success: false, message: 'Category not found or unauthorized' });
       return;
     }
+
+    const isUsed = await Transaction.exists({ category: id, userId });
+    
+    if (isUsed) {
+      res.status(400).json({ 
+        success: false, 
+        message: 'Cannot delete category because it contains transactions. Please delete the transactions first.' 
+      });
+      return;
+    }
+
+    await category.deleteOne();
 
     res.status(200).json({ 
       success: true,
       message: 'Category deleted successfully' 
     });
+
   } catch (error) {
     console.error(`[deleteCategory] Error: ${(error as Error).message}`);
-    res.status(500).json({ message: 'Server Error while deleting category' });
+    res.status(500).json({ success: false, message: 'Server Error while deleting category' });
   }
 };
 
