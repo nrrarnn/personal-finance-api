@@ -8,12 +8,13 @@ import {
 import { getCategories, addCategory, deleteCategory, updateCategory } from '../controllers/categoryController';
 import authenticate from '../middlewares/authenticate';
 import { getBalance } from '../controllers/balanceController';
-import { getCategoryStats, getPieChartData } from '../controllers/statsController';
+import { getCategoryStats, getPieChartData, getStatsByUser } from '../controllers/statsController';
 
 const router = Router();
 
 router.get('/stats/category', authenticate, getCategoryStats);
 router.get('/stats/pie-chart', authenticate, getPieChartData);
+router.get('/stats/user', authenticate, getStatsByUser);
 
 router.post('/transactions', authenticate, createTransaction);
 router.get('/transactions', authenticate, getTransactions);

@@ -40,7 +40,52 @@ export const getCategoryStats = async (
       return;
     }
 
-    const stats = await getMonthlyCategoryStats(userId, monthNum, yearNum);
+    const startDate = new Date(Date.UTC(yearNum, monthNum - 1, 1));
+    const endDate = new Date(Date.UTC(yearNum, monthNum, 0, 23, 59, 59, 999));
+
+    const stats = await Transaction.aggregate([
+
+      {
+        $match: {
+          userId: new mongoose.Types.ObjectId(userId),
+          date: { $gte: startDate, $lte: endDate }
+        }
+      },
+
+      {
+        $group: {
+          _id: "$category", 
+          totalAmount: { $sum: "$amount" },
+          count: { $sum: 1 }
+        }
+      },
+
+      {
+        $lookup: {
+          from: "categories",       
+          localField: "_id",        
+          foreignField: "_id",      
+          as: "categoryInfo"       
+        }
+      },
+
+      {
+        $unwind: "$categoryInfo" 
+      },
+
+      {
+        $project: {
+          _id: 0,                            
+          categoryId: "$_id",               
+          categoryName: "$categoryInfo.name", 
+          categoryIcon: "$categoryInfo.icon", 
+          type: "$categoryInfo.type",       
+          totalAmount: 1,                    
+          count: 1                         
+        }
+      },
+      { $sort: { totalAmount: -1 } }
+    ]);
 
     res.status(200).json({
       success: true,
@@ -85,49 +130,42 @@ export const getPieChartData = async (
     const endDate = new Date(Date.UTC(yearNum, monthNum, 0, 23, 59, 59, 999));
 
     const stats = await Transaction.aggregate([
-      // 1. Filter by User, Type, and Date Range
       {
         $match: {
-          userId: new mongoose.Types.ObjectId(userId),
           type,
           date: { $gte: startDate, $lte: endDate }
         }
       },
-      // 2. Group by Category ObjectId and sum amounts
       {
         $group: {
-          _id: "$category",
+          _id: "$userId",
           totalAmount: { $sum: "$amount" }
         }
       },
-      // 3. Join with Categories collection to get metadata
       {
         $lookup: {
-          from: "categories",
+          from: "users",
           localField: "_id",
           foreignField: "_id",
-          as: "categoryDetails"
+          as: "userDetails"
         }
       },
-      // 4. Flatten the categoryDetails array - handle cases where category might have been deleted but transaction exists
       { 
         $unwind: {
-          path: "$categoryDetails",
-          preserveNullAndEmptyArrays: false // We only want valid categories for the chart
+          path: "$userDetails",
+          preserveNullAndEmptyArrays: false
         }
       },
-      // 5. Project final format for frontend chart libraries
       {
         $project: {
           _id: 0,
-          label: { $ifNull: ["$categoryDetails.name", "Unknown"] },
+          label: { $ifNull: ["$userDetails.email", "Unknown"] },
           value: "$totalAmount",
-          color: { $ifNull: ["$categoryDetails.color", "#cccccc"] },
-          icon: { $ifNull: ["$categoryDetails.icon", "❓"] }
+          color: "#3b82f6",
+          icon: "👤"
         }
       },
 
-      // 6. Sort by value descending
       { $sort: { value: -1 } }
     ]);
 
@@ -139,5 +177,77 @@ export const getPieChartData = async (
   } catch (error) {
     console.error(`[getPieChartData] Error: ${(error as Error).message}`);
     res.status(500).json({ success: false, message: "Server error while fetching chart data" });
+  }
+};
+
+/**
+ * Controller to fetch statistics for the authenticated user.
+ */
+export const getStatsByUser = async (
+  req: Request<{}, {}, {}, StatsQuery>,
+  res: Response<MonthlyStatsResponse>
+): Promise<void> => {
+  try {
+    const userId = req.user?.userId;
+    
+    if (!userId) {
+      res.status(401).json({ 
+        success: false, 
+        message: "User not authenticated" 
+      });
+      return;
+    }
+
+    const { month, year } = req.query;
+
+    if (!month || !year) {
+      res.status(400).json({ 
+        success: false, 
+        message: "Required query parameters 'month' and 'year' are missing" 
+      });
+      return;
+    }
+
+    const monthNum = parseInt(month, 10);
+    const yearNum = parseInt(year, 10);
+
+    if (isNaN(monthNum) || isNaN(yearNum) || monthNum < 1 || monthNum > 12) {
+      res.status(400).json({ 
+        success: false, 
+        message: "Invalid month or year provided" 
+      });
+      return;
+    }
+
+    const startDate = new Date(Date.UTC(yearNum, monthNum - 1, 1));
+    const endDate = new Date(Date.UTC(yearNum, monthNum, 0, 23, 59, 59, 999));
+
+    const stats = await Transaction.aggregate([
+      {
+        $match: {
+          date: { $gte: startDate, $lte: endDate }
+        }
+      },
+      {
+        $group: {
+          _id: "$userId",
+          totalAmount: { $sum: "$amount" },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { totalAmount: -1 } }
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: stats
+    });
+
+  } catch (error) {
+    console.error(`[getStatsByUser] Error: ${(error as Error).message}`);
+    res.status(500).json({ 
+      success: false, 
+      message: "An internal server error occurred while fetching user statistics" 
+    });
   }
 };
