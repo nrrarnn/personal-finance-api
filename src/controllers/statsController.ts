@@ -90,7 +90,7 @@ export const getCategoryStats = async (
     res.status(200).json({
       success: true,
       data: stats
-    });
+    }); 
 
   } catch (error) {
     console.error(`[getCategoryStats] Error: ${(error as Error).message}`);
