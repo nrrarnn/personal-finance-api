@@ -39,8 +39,10 @@ app.get('/', (req, res) => {
   res.send('Welcome to the API Personal Finance');
 });
 
-app.listen(process.env.PORT || 5000, () => {
-  console.log(`Server is running on port ${process.env.PORT || 5000}`);
-});
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(process.env.PORT || 5000, () => {
+    console.log(`Server is running on port ${process.env.PORT || 5000}`);
+  });
+}
 
 export default app;
