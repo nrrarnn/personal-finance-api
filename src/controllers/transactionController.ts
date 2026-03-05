@@ -178,7 +178,7 @@ export const getTransactionsByCategory = async (req: Request, res: Response): Pr
       res.status(401).json({ message: "User not authenticated" });
       return;
     }
-    const { categoryId, month, year } = req.params;
+    const { categoryId, month, year } = req.query as { categoryId: string, month: string, year: string };
 
     if (!mongoose.Types.ObjectId.isValid(categoryId)) {
       res.status(400).json({ message: "Invalid category ID format" });
@@ -191,12 +191,14 @@ export const getTransactionsByCategory = async (req: Request, res: Response): Pr
       return;
     }
 
-    const monthNum = parseInt(month, 10);
-    const yearNum = parseInt(year, 10);
-    if (isNaN(monthNum) || isNaN(yearNum) || monthNum < 1 || monthNum > 12) {
-      res.status(400).json({ message: "Invalid month or year provided" });
+    if (!month || !year) {
+      res.status(400).json({ success: false, message: "Month and year are required" });
       return;
     }
+
+    const monthNum = parseInt(month, 10);
+    const yearNum = parseInt(year, 10);
+    
 
     const startDate = new Date(Date.UTC(yearNum, monthNum - 1, 1));
     const endDate = new Date(Date.UTC(yearNum, monthNum, 0, 23, 59, 59, 999));
