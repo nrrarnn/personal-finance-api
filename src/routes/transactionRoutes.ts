@@ -3,7 +3,8 @@ import {
   createTransaction, 
   getTransactions, 
   updateTransaction, 
-  deleteTransaction 
+  deleteTransaction, 
+  getTransactionsByCategory
 } from '../controllers/transactionController';
 import { getCategories, addCategory, deleteCategory, updateCategory } from '../controllers/categoryController';
 import authenticate from '../middlewares/authenticate';
@@ -20,6 +21,7 @@ router.post('/transactions', authenticate, createTransaction);
 router.get('/transactions', authenticate, getTransactions);
 router.put('/transactions/:id', authenticate, updateTransaction);
 router.delete('/transactions/:id', authenticate, deleteTransaction);
+router.get('/transactions/category/:categoryId', authenticate, getTransactionsByCategory);
 
 router.get('/categories', authenticate, getCategories);
 router.post('/category', authenticate, addCategory);

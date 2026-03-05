@@ -171,3 +171,45 @@ export const deleteTransaction = async (req: Request, res: Response): Promise<vo
   }
 };
 
+export const getTransactionsByCategory = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      res.status(401).json({ message: "User not authenticated" });
+      return;
+    }
+    const { categoryId, month, year } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(categoryId)) {
+      res.status(400).json({ message: "Invalid category ID format" });
+      return;
+    }
+
+    const categoryExists = await Category.findOne({ _id: categoryId, userId });
+    if (!categoryExists) {
+      res.status(404).json({ message: "Category not found or unauthorized" });
+      return;
+    }
+
+    const monthNum = parseInt(month, 10);
+    const yearNum = parseInt(year, 10);
+    if (isNaN(monthNum) || isNaN(yearNum) || monthNum < 1 || monthNum > 12) {
+      res.status(400).json({ message: "Invalid month or year provided" });
+      return;
+    }
+
+    const startDate = new Date(Date.UTC(yearNum, monthNum - 1, 1));
+    const endDate = new Date(Date.UTC(yearNum, monthNum, 0, 23, 59, 59, 999));
+    const transactions = await Transaction.find({
+      category: categoryId,
+      userId,
+      date: { $gte: startDate, $lte: endDate }
+    }).sort({ date: -1 });
+    const amountSum = transactions.reduce((sum, txn) => sum + txn.amount, 0);
+    res.status(200).json({ totalAmount: amountSum, transactions });
+
+  } catch (error) {
+    console.error(`[getTransactionsByCategory] Error: ${(error as Error).message}`);
+    res.status(500).json({ message: "Server error while fetching transactions by category" });
+  }
+};
