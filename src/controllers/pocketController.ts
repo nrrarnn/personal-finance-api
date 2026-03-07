@@ -12,6 +12,7 @@ export const createPocket = async (req: Request, res: Response) => {
       data: pocket
     });
   } catch (error) {
+    console.error("Error creating pocket:", error);
     res.status(500).json({ message: "Failed to create pocket" });
   }
 };

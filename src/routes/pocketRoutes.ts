@@ -1,11 +1,12 @@
 import express from "express";
-import * as pocketController from "../controllers/pocketController";
+import authenticate from "../middlewares/authenticate";
+import { createPocket, deletePocket, getPockets, updatePocket } from "../controllers/pocketController";
 
 const router = express.Router();
 
-router.post("/", pocketController.createPocket);
-router.get("/", pocketController.getPockets);
-router.put("/:id", pocketController.updatePocket);
-router.delete("/:id", pocketController.deletePocket);
+router.post("/", authenticate, createPocket);
+router.get("/", authenticate, getPockets);
+router.put("/:id", authenticate, updatePocket);
+router.delete("/:id", authenticate, deletePocket);
 
 export default router;
