@@ -8,6 +8,7 @@ export interface ITransaction extends Document {
   amount: number;
   category: Types.ObjectId | ICategory;
   date: Date;
+  pocketId?: Types.ObjectId;
   description?: string;
 }
 
@@ -18,6 +19,7 @@ const TransactionSchema: Schema = new Schema({
   amount: { type: Number, required: true },
   category: { type: Schema.Types.ObjectId, ref: 'Category', required: true },
   date: { type: Date, default: Date.now, index: true }, 
+  pocketId: { type: Schema.Types.ObjectId, ref: 'Pocket', required: false },
   description: { type: String }
 }, { timestamps: true });
 
